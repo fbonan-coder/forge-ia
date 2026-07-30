@@ -3,26 +3,6 @@ const $ = (selector) => document.querySelector(selector);
 let projects = [];
 let selectedId = null;
 
-function getPreviewUrl(id, refresh = false) {
-  const base = `/preview/${id}/`;
-
-  return refresh
-    ? `${base}?refresh=${Date.now()}`
-    : base;
-}
-
-function refreshPreview() {
-  if (!selectedId) return;
-
-  const url = getPreviewUrl(selectedId, true);
-
-  $("#previewAddress").textContent =
-    `${window.location.origin}/preview/${selectedId}/`;
-
-  $("#previewFrame").src = url;
-}
-
-
 async function request(url, options = {}) {
   const response = await fetch(url, {
     ...options,
@@ -53,6 +33,25 @@ const escapeHtml = (value) =>
         "'": "&#039;",
       })[character]
   );
+
+function getPreviewUrl(id, refresh = false) {
+  const base = `/preview/${id}/`;
+
+  return refresh
+    ? `${base}?refresh=${Date.now()}`
+    : base;
+}
+
+function refreshPreview() {
+  if (!selectedId) return;
+
+  const address =
+    `${window.location.origin}/preview/${selectedId}/`;
+
+  $("#previewAddress").textContent = address;
+  $("#previewFrame").src =
+    getPreviewUrl(selectedId, true);
+}
 
 function projectList() {
   $("#projects").innerHTML = projects
@@ -97,7 +96,9 @@ async function loadProjects() {
 
   if (
     selectedId &&
-    projects.some((project) => project.id === selectedId)
+    projects.some(
+      (project) => project.id === selectedId
+    )
   ) {
     await selectProject(selectedId);
   }
@@ -118,8 +119,10 @@ async function selectProject(id) {
 
   $("#slug").textContent = project.slug;
   $("#name").textContent = project.name;
+
   $("#description").textContent =
     project.description || "Aucune description";
+
   $("#status").textContent = project.state;
 
   $("#cost").textContent =
@@ -129,13 +132,12 @@ async function selectProject(id) {
 
   $("#lastActivity").textContent =
     project.last_opened_at
-      ? new Date(project.last_opened_at).toLocaleString(
-          "fr-FR",
-          {
-            dateStyle: "short",
-            timeStyle: "short",
-          }
-        )
+      ? new Date(
+          project.last_opened_at
+        ).toLocaleString("fr-FR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
       : "Jamais";
 
   $("#toggleRuntime").textContent =
@@ -153,6 +155,7 @@ async function selectProject(id) {
                   : "Forge IA"
               }
             </b>
+
             <p>${escapeHtml(message.content)}</p>
           </article>
         `
@@ -168,8 +171,11 @@ async function selectProject(id) {
 
             <span>
               <b>${escapeHtml(run.prompt)}</b>
+
               <small>
-                ${run.status} · ${run.model || "mock"}
+                ${escapeHtml(run.status)}
+                ·
+                ${escapeHtml(run.model || "mock")}
               </small>
             </span>
 
@@ -182,6 +188,7 @@ async function selectProject(id) {
       .join("") || "<p>Aucune exécution.</p>";
 
   projectList();
+  refreshPreview();
 }
 
 $("#showCreate").onclick = () => {
@@ -195,15 +202,20 @@ $(".close").onclick = () => {
 $("#createForm").onsubmit = async (event) => {
   event.preventDefault();
 
-  const form = new FormData(event.currentTarget);
+  const form = new FormData(
+    event.currentTarget
+  );
 
-  const { project } = await request("/api/projects", {
-    method: "POST",
-    body: JSON.stringify({
-      name: form.get("name"),
-      description: form.get("description"),
-    }),
-  });
+  const { project } = await request(
+    "/api/projects",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        name: form.get("name"),
+        description: form.get("description"),
+      }),
+    }
+  );
 
   event.currentTarget.reset();
   $("#createDialog").close();
@@ -216,26 +228,24 @@ $("#toggleRuntime").onclick = async () => {
   if (!selectedId) return;
 
   const button = $("#toggleRuntime");
+
   button.disabled = true;
   button.textContent = "Ouverture…";
 
   try {
-    const { project } = await request(
+    await request(
       `/api/projects/${selectedId}/open`,
       {
         method: "POST",
       }
     );
 
-    const previewUrl =
-      project.dev_url ||
-      `/preview/${selectedId}/`;
+    refreshPreview();
 
-    window.open(
-      previewUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    $("#previewPanel").scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
 
     await loadProjects();
   } catch (error) {
@@ -246,39 +256,67 @@ $("#toggleRuntime").onclick = async () => {
   }
 };
 
-$("#checkpoint").onclick = async () => {
-  await request(
-    `/api/projects/${selectedId}/checkpoints`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        label: "Checkpoint manuel",
-      }),
-    }
+$("#refreshPreview").onclick = () => {
+  refreshPreview();
+};
+
+$("#openPreview").onclick = () => {
+  if (!selectedId) return;
+
+  window.open(
+    getPreviewUrl(selectedId),
+    "_blank",
+    "noopener,noreferrer"
   );
+};
 
-  $("#checkpoint").textContent =
-    "✓ Checkpoint créé";
+$("#checkpoint").onclick = async () => {
+  if (!selectedId) return;
 
-  setTimeout(() => {
-    $("#checkpoint").textContent =
+  const button = $("#checkpoint");
+
+  button.disabled = true;
+
+  try {
+    await request(
+      `/api/projects/${selectedId}/checkpoints`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          label: "Checkpoint manuel",
+        }),
+      }
+    );
+
+    button.textContent = "✓ Checkpoint créé";
+
+    setTimeout(() => {
+      button.textContent =
+        "Créer un checkpoint";
+    }, 1400);
+  } catch (error) {
+    alert(error.message);
+    button.textContent =
       "Créer un checkpoint";
-  }, 1400);
+  } finally {
+    button.disabled = false;
+  }
 };
 
 $("#promptForm").onsubmit = async (event) => {
   event.preventDefault();
+
+  if (!selectedId) return;
 
   const input = $("#prompt");
   const prompt = input.value.trim();
 
   if (!prompt) return;
 
-  input.value = "";
-
   const button =
     event.currentTarget.querySelector("button");
 
+  input.value = "";
   button.disabled = true;
   button.textContent = "Exécution…";
 
@@ -292,6 +330,7 @@ $("#promptForm").onsubmit = async (event) => {
     );
 
     await loadProjects();
+    refreshPreview();
   } catch (error) {
     alert(error.message);
   } finally {
@@ -310,4 +349,8 @@ request("/api/health")
       "Serveur indisponible";
   });
 
-loadProjects();
+loadProjects().catch((error) => {
+  console.error(error);
+  $("#health").textContent =
+    "Erreur de chargement";
+});
