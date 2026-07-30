@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Forge IA — Developer Cockpit</title>
+  <link rel="stylesheet" href="/styles.css?v=5">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">Forge<br>IA</div>
+      <button class="project-switcher" id="projectSwitcher">
+        <span class="project-mark" id="projectMark">F</span>
+        <span><strong id="projectName">Forge IA</strong><small id="projectSlug">Sélectionner un projet</small></span>
+        <i>⌄</i>
+      </button>
+      <div class="live"><i></i><span id="health">Connexion…</span></div>
+      <div class="header-actions">
+        <button class="checkpoint" id="checkpoint">♧ Créer un checkpoint</button>
+        <button class="cost" id="projectCost">$0.0000</button>
+        <div class="devices" aria-label="Taille de l’aperçu">
+          <button class="on" data-device="desktop" title="Ordinateur">▱</button>
+          <button data-device="tablet" title="Tablette">▯</button>
+          <button data-device="mobile" title="Mobile">▥</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="rail" aria-label="Navigation principale">
+      <div>
+        <button class="on" title="Cockpit">⌂</button>
+        <button id="railProjects" title="Projets">◇</button>
+        <button title="Historique">◌</button>
+        <button title="Déploiements">⌁</button>
+        <button title="Activité">◉</button>
+        <button title="Réglages">⚙</button>
+      </div>
+      <span class="avatar">FB</span>
+    </nav>
+
+    <aside class="explorer">
+      <section>
+        <div class="section-label"><span>Projet</span><b id="projectState">—</b></div>
+        <button class="explorer-row on">⌑ Aperçu du site</button>
+        <button class="explorer-row">‹/› Espace de travail</button>
+        <button class="explorer-row">◫ Données du projet</button>
+      </section>
+
+      <section>
+        <div class="section-label"><span>Activité</span><b id="runCount">0</b></div>
+        <div id="runHistory" class="history"></div>
+      </section>
+
+      <section>
+        <div class="section-label"><span>Informations</span></div>
+        <div class="project-meta">
+          <span>Dernière ouverture</span>
+          <b id="lastActivity">Jamais</b>
+          <span>Coût cumulé</span>
+          <b id="sideCost">$0.0000</b>
+        </div>
+      </section>
+    </aside>
+
+    <section class="chat">
+      <div class="panel-title">Conversation</div>
+      <div class="messages" id="messages">
+        <div class="empty-chat">Sélectionne un projet pour reprendre son contexte.</div>
+      </div>
+      <form id="promptForm">
+        <textarea id="prompt" rows="3" placeholder="Décris la prochaine modification…" required></textarea>
+        <span class="model" id="modelName">＋ &nbsp; Claude Sonnet</span>
+        <button class="send" type="submit" aria-label="Exécuter">→</button>
+      </form>
+    </section>
+
+    <section class="work">
+      <div class="work-tabs">
+        <button class="on" data-tab="preview">Aperçu</button>
+        <button data-tab="activity">Exécutions</button>
+        <span class="preview-url" id="previewAddress">Aucun projet</span>
+        <button id="refreshPreview" title="Actualiser">↻</button>
+        <button id="openPreview" title="Ouvrir dans un onglet">↗</button>
+      </div>
+      <div class="stage">
+        <div class="preview-shell" id="previewShell">
+          <iframe
+            id="previewFrame"
+            title="Prévisualisation du projet"
+            sandbox="allow-scripts allow-forms allow-modals"
+          ></iframe>
+        </div>
+        <div class="activity-view" id="activityView">
+          <div class="activity-head"><span>EXÉCUTIONS DU PROJET</span><b id="activityCount">0</b></div>
+          <div id="activityRuns"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="project-panel" id="projectPanel" aria-hidden="true">
+    <section class="project-drawer">
+      <header>
+        <div><small>ESPACE DE TRAVAIL</small><h2>Mes projets</h2></div>
+        <button id="closeProjects" aria-label="Fermer">×</button>
+      </header>
+      <input id="projectSearch" placeholder="Rechercher un projet…" autocomplete="off">
+      <div class="project-list" id="projectList"></div>
+      <form class="new-project" id="createForm">
+        <h3>Nouveau projet</h3>
+        <input name="name" required placeholder="Nom du projet">
+        <textarea name="description" placeholder="Description courte"></textarea>
+        <button>Créer et ouvrir le projet</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="/app.js?v=5"></script>
+</body>
+</html>
