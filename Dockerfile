@@ -1,15 +1,10 @@
-FROM node:24-alpine
+FROM node:24-slim
 
 WORKDIR /app
 
-RUN apk add --no-cache \
-    bash \
-    git \
-    libgcc \
-    libstdc++ \
-    ripgrep
-
-ENV USE_BUILTIN_RIPGREP=0
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bash git ripgrep ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./
 RUN npm install --omit=dev
