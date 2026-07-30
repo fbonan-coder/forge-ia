@@ -2,229 +2,120 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <title>Forge IA — Project Manager</title>
-
-  <link
-    rel="stylesheet"
-    href="/styles.css"
-  >
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Forge IA — Developer Cockpit</title>
+  <link rel="stylesheet" href="/styles.css?v=5">
 </head>
-
 <body>
-  <header>
-    <div class="logo">
-      FORGE <i></i> IA
-    </div>
-
-    <div>
-      <b>Project Manager</b>
-      <small>Socle serveur multi-projet</small>
-    </div>
-
-    <span id="health">
-      Connexion…
-    </span>
-  </header>
-
-  <main>
-    <aside>
-      <div class="heading">
-        <b>Projets</b>
-
-        <button
-          id="showCreate"
-          type="button"
-          aria-label="Créer un projet"
-        >
-          ＋
-        </button>
+  <div class="app">
+    <header>
+      <div class="logo">Forge<br>IA</div>
+      <button class="project-switcher" id="projectSwitcher">
+        <span class="project-mark" id="projectMark">F</span>
+        <span><strong id="projectName">Forge IA</strong><small id="projectSlug">Sélectionner un projet</small></span>
+        <i>⌄</i>
+      </button>
+      <div class="live"><i></i><span id="health">Connexion…</span></div>
+      <div class="header-actions">
+        <button class="checkpoint" id="checkpoint">♧ Créer un checkpoint</button>
+        <button class="cost" id="projectCost">$0.0000</button>
+        <div class="devices" aria-label="Taille de l’aperçu">
+          <button class="on" data-device="desktop" title="Ordinateur">▱</button>
+          <button data-device="tablet" title="Tablette">▯</button>
+          <button data-device="mobile" title="Mobile">▥</button>
+        </div>
       </div>
+    </header>
 
-      <div id="projects"></div>
+    <nav class="rail" aria-label="Navigation principale">
+      <div>
+        <button class="on" title="Cockpit">⌂</button>
+        <button id="railProjects" title="Projets">◇</button>
+        <button title="Historique">◌</button>
+        <button title="Déploiements">⌁</button>
+        <button title="Activité">◉</button>
+        <button title="Réglages">⚙</button>
+      </div>
+      <span class="avatar">FB</span>
+    </nav>
+
+    <aside class="explorer">
+      <section>
+        <div class="section-label"><span>Projet</span><b id="projectState">—</b></div>
+        <button class="explorer-row on">⌑ Aperçu du site</button>
+        <button class="explorer-row">‹/› Espace de travail</button>
+        <button class="explorer-row">◫ Données du projet</button>
+      </section>
+
+      <section>
+        <div class="section-label"><span>Activité</span><b id="runCount">0</b></div>
+        <div id="runHistory" class="history"></div>
+      </section>
+
+      <section>
+        <div class="section-label"><span>Informations</span></div>
+        <div class="project-meta">
+          <span>Dernière ouverture</span>
+          <b id="lastActivity">Jamais</b>
+          <span>Coût cumulé</span>
+          <b id="sideCost">$0.0000</b>
+        </div>
+      </section>
     </aside>
 
-    <section
-      class="empty"
-      id="empty"
-    >
-      <span>◇</span>
-
-      <h1>Sélectionne un projet</h1>
-
-      <p>
-        Chaque projet possède sa conversation,
-        son coût et son espace de travail.
-      </p>
+    <section class="chat">
+      <div class="panel-title">Conversation</div>
+      <div class="messages" id="messages">
+        <div class="empty-chat">Sélectionne un projet pour reprendre son contexte.</div>
+      </div>
+      <form id="promptForm">
+        <textarea id="prompt" rows="3" placeholder="Décris la prochaine modification…" required></textarea>
+        <span class="model" id="modelName">＋ &nbsp; Claude Sonnet</span>
+        <button class="send" type="submit" aria-label="Exécuter">→</button>
+      </form>
     </section>
 
-    <section
-      class="project-view hidden"
-      id="view"
-    >
-      <div class="project-head">
-        <div>
-          <small id="slug"></small>
-          <h1 id="name"></h1>
-          <p id="description"></p>
-        </div>
-
-        <div>
-          <span
-            class="status"
-            id="status"
-          ></span>
-
-          <button
-            id="toggleRuntime"
-            type="button"
-          >
-            Ouvrir le projet
-          </button>
-
-          <button
-            id="checkpoint"
-            type="button"
-          >
-            Créer un checkpoint
-          </button>
-        </div>
+    <section class="work">
+      <div class="work-tabs">
+        <button class="on" data-tab="preview">Aperçu</button>
+        <button data-tab="activity">Exécutions</button>
+        <span class="preview-url" id="previewAddress">Aucun projet</span>
+        <button id="refreshPreview" title="Actualiser">↻</button>
+        <button id="openPreview" title="Ouvrir dans un onglet">↗</button>
       </div>
-
-      <div class="metrics">
-        <article>
-          <small>Coût total</small>
-          <b id="cost">$0.00</b>
-        </article>
-
-        <article>
-          <small>Exécutions</small>
-          <b id="runCount">0</b>
-        </article>
-
-        <article>
-          <small>Dernière activité</small>
-          <b id="lastActivity">—</b>
-        </article>
-      </div>
-
-      <section
-        class="preview-panel"
-        id="previewPanel"
-      >
-        <div class="preview-toolbar">
-          <div>
-            <span class="preview-dot"></span>
-            <b>Prévisualisation</b>
-          </div>
-
-          <div class="preview-actions">
-            <button
-              id="refreshPreview"
-              type="button"
-            >
-              Actualiser
-            </button>
-
-            <button
-              id="openPreview"
-              type="button"
-            >
-              Ouvrir dans un onglet
-            </button>
-          </div>
-        </div>
-
-        <div class="preview-browser">
-          <div class="preview-address">
-            <span>🔒</span>
-
-            <span id="previewAddress">
-              Aucun projet
-            </span>
-          </div>
-
+      <div class="stage">
+        <div class="preview-shell" id="previewShell">
           <iframe
             id="previewFrame"
             title="Prévisualisation du projet"
             sandbox="allow-scripts allow-forms allow-modals"
           ></iframe>
         </div>
-      </section>
-
-      <div class="content">
-        <div class="conversation">
-          <h2>Conversation</h2>
-
-          <div id="messages"></div>
-
-          <form id="promptForm">
-            <textarea
-              id="prompt"
-              placeholder="Décris la prochaine modification…"
-              required
-            ></textarea>
-
-            <button type="submit">
-              Exécuter →
-            </button>
-          </form>
-        </div>
-
-        <div class="runs">
-          <h2>Exécutions</h2>
-          <div id="runs"></div>
+        <div class="activity-view" id="activityView">
+          <div class="activity-head"><span>EXÉCUTIONS DU PROJET</span><b id="activityCount">0</b></div>
+          <div id="activityRuns"></div>
         </div>
       </div>
     </section>
-  </main>
+  </div>
 
-  <dialog id="createDialog">
-    <form id="createForm">
-      <button
-        class="close"
-        type="button"
-        aria-label="Fermer"
-      >
-        ×
-      </button>
+  <div class="project-panel" id="projectPanel" aria-hidden="true">
+    <section class="project-drawer">
+      <header>
+        <div><small>ESPACE DE TRAVAIL</small><h2>Mes projets</h2></div>
+        <button id="closeProjects" aria-label="Fermer">×</button>
+      </header>
+      <input id="projectSearch" placeholder="Rechercher un projet…" autocomplete="off">
+      <div class="project-list" id="projectList"></div>
+      <form class="new-project" id="createForm">
+        <h3>Nouveau projet</h3>
+        <input name="name" required placeholder="Nom du projet">
+        <textarea name="description" placeholder="Description courte"></textarea>
+        <button>Créer et ouvrir le projet</button>
+      </form>
+    </section>
+  </div>
 
-      <small>NOUVEAU PROJET</small>
-
-      <h2>Créer un espace isolé</h2>
-
-      <label>
-        Nom
-
-        <input
-          name="name"
-          required
-          placeholder="Aura DEXA"
-        >
-      </label>
-
-      <label>
-        Description
-
-        <textarea
-          name="description"
-          placeholder="Landing page premium pour un centre DEXA"
-        ></textarea>
-      </label>
-
-      <button
-        class="primary"
-        type="submit"
-      >
-        Créer le projet
-      </button>
-    </form>
-  </dialog>
-
-  <script src="/app.js"></script>
+  <script src="/app.js?v=5"></script>
 </body>
 </html>
