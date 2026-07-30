@@ -1,0 +1,14 @@
+services:
+  forge:
+    build: .
+    ports:
+      - "8787:8787"
+    env_file:
+      - .env
+    volumes:
+      - forge-data:/data
+      - forge-workspaces:/workspaces
+
+volumes:
+  forge-data:
+  forge-workspaces:
