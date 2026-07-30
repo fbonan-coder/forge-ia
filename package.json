@@ -9,7 +9,7 @@
     "test": "node --test"
   },
   "optionalDependencies": {
-    "@anthropic-ai/claude-agent-sdk": "latest"
+    "@anthropic-ai/claude-agent-sdk": "0.2.112"
   },
   "engines": {
     "node": ">=24"
