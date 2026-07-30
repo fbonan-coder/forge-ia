@@ -7,6 +7,7 @@ import { Store } from "./db.js";
 import { WorkspaceManager } from "./workspace-manager.js";
 import { createAgent } from "./agent.js";
 import { json, readJson, safeSlug } from "./http.js";
+import { timingSafeEqual } from "node:crypto";
 
 const store = new Store(config.dataDir);
 const workspaces = new WorkspaceManager(config.workspacesDir);
@@ -107,7 +108,54 @@ function staticFile(response, pathname) {
   return true;
 }
 
+function secureEqual(left, right) {
+  const a = Buffer.from(String(left));
+  const b = Buffer.from(String(right));
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function isAuthorized(request) {
+  const expectedPassword = process.env.FORGE_PASSWORD;
+
+  // Authentification désactivée tant que le secret n’est pas configuré.
+  if (!expectedPassword) return true;
+
+  const expectedUsername = process.env.FORGE_USERNAME || "forge";
+  const authorization = request.headers.authorization || "";
+  const [scheme, encoded] = authorization.split(" ");
+
+  if (scheme !== "Basic" || !encoded) return false;
+
+  try {
+    const credentials = Buffer.from(encoded, "base64").toString("utf8");
+    const separator = credentials.indexOf(":");
+
+    if (separator < 0) return false;
+
+    const username = credentials.slice(0, separator);
+    const password = credentials.slice(separator + 1);
+
+    return (
+      secureEqual(username, expectedUsername) &&
+      secureEqual(password, expectedPassword)
+    );
+  } catch {
+    return false;
+  }
+}
+
 const server = http.createServer(async (request, response) => {
+
+    if (!isAuthorized(request)) {
+    response.writeHead(401, {
+      "www-authenticate": 'Basic realm="Forge IA"',
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+    });
+    response.end("Authentication required");
+    return;
+  }
+  
   const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
   try {
     if (url.pathname.startsWith("/api/")) return await api(request, response, url.pathname);
