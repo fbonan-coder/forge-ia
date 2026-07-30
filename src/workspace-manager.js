@@ -18,7 +18,7 @@ export class WorkspaceManager {
     const workspace = this.pathFor(slug);
     fs.mkdirSync(workspace, { recursive: true });
     fs.writeFileSync(path.join(workspace, "README.md"), `# ${slug}\n\nCreated by Forge IA.\n`);
-    fs.mkdirSync(path.join(workspace, "src"));
+    fs.mkdirSync(path.join(workspace, "src"), { recursive: true });
     fs.writeFileSync(path.join(workspace, "src", "main.js"), `console.log("Hello from ${slug}");\n`);
     return workspace;
   }
