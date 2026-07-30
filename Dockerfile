@@ -10,5 +10,4 @@ ENV DATA_DIR=/data
 ENV WORKSPACES_DIR=/workspaces
 EXPOSE 8787
 
-VOLUME ["/data", "/workspaces"]
 CMD ["npm", "start"]
