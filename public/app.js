@@ -3,6 +3,26 @@ const $ = (selector) => document.querySelector(selector);
 let projects = [];
 let selectedId = null;
 
+function getPreviewUrl(id, refresh = false) {
+  const base = `/preview/${id}/`;
+
+  return refresh
+    ? `${base}?refresh=${Date.now()}`
+    : base;
+}
+
+function refreshPreview() {
+  if (!selectedId) return;
+
+  const url = getPreviewUrl(selectedId, true);
+
+  $("#previewAddress").textContent =
+    `${window.location.origin}/preview/${selectedId}/`;
+
+  $("#previewFrame").src = url;
+}
+
+
 async function request(url, options = {}) {
   const response = await fetch(url, {
     ...options,
