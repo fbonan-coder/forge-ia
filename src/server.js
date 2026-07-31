@@ -9,10 +9,15 @@ import { WorkspaceManager } from "./workspace-manager.js";
 import { createAgent } from "./agent.js";
 import { json, readJson, safeSlug } from "./http.js";
 import { listWorkspaceFiles } from "./workspace-files.js";
+import { CheckpointManager } from "./checkpoint-manager.js";
 
 const store = new Store(config.dataDir);
 const workspaces = new WorkspaceManager(config.workspacesDir);
 const agent = createAgent(config);
+const checkpointFiles = new CheckpointManager(
+  path.join(config.dataDir, "checkpoints"),
+  config.workspacesDir,
+);
 const publicDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../public");
 
 const mimeTypes = {
@@ -106,6 +111,11 @@ async function api(request, response, pathname) {
     store.addMessage(id, "user", prompt);
     const run = store.createRun(id, prompt, config.anthropicModel);
     try {
+      const automaticCheckpoint = store.addCheckpoint(
+        id,
+        `Avant : ${prompt.slice(0, 80)}`,
+      );
+      checkpointFiles.create(project, automaticCheckpoint.id);
       const result = await agent.run({ project, prompt });
       const finished = store.finishRun(run.id, { status: "succeeded", ...result });
       store.addMessage(id, "assistant", result.text);
@@ -118,11 +128,30 @@ async function api(request, response, pathname) {
     }
   }
   if (request.method === "GET" && action === "checkpoints") {
-    return json(response, 200, { checkpoints: store.listCheckpoints(id) });
+    const checkpoints = store.listCheckpoints(id).map((checkpoint) => ({
+      ...checkpoint,
+      available: checkpointFiles.exists(id, checkpoint.id),
+    }));
+    return json(response, 200, { checkpoints });
   }
   if (request.method === "POST" && action === "checkpoints") {
     const body = await readJson(request);
+    if (body.restoreId) {
+      const target = store.listCheckpoints(id).find(
+        (checkpoint) => checkpoint.id === String(body.restoreId),
+      );
+      if (!target) return json(response, 404, { error: "Checkpoint not found" });
+
+      const safety = store.addCheckpoint(id, "Avant restauration");
+      checkpointFiles.create(project, safety.id);
+      checkpointFiles.restore(project, target.id);
+      return json(response, 200, {
+        restored: target,
+        safetyCheckpoint: safety,
+      });
+    }
     const checkpoint = store.addCheckpoint(id, String(body.label || "Checkpoint manuel"), body.commitSha, body.deploymentUrl);
+    checkpointFiles.create(project, checkpoint.id);
     return json(response, 201, { checkpoint });
   }
   return json(response, 405, { error: "Method not allowed" });
