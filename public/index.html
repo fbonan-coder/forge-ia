@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Forge IA — Developer Cockpit</title>
-  <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
   <div class="app">
@@ -42,9 +42,9 @@
     <aside class="explorer">
       <section>
         <div class="section-label"><span>Projet</span><b id="projectState">—</b></div>
-        <button class="explorer-row on">⌑ Aperçu du site</button>
-        <button class="explorer-row">‹/› Espace de travail</button>
-        <button class="explorer-row">◫ Données du projet</button>
+        <button class="explorer-row on" id="showPreview">⌑ Aperçu du site</button>
+        <button class="explorer-row" id="showFiles">‹/› Espace de travail <b id="fileCount">0</b></button>
+        <div class="file-tree" id="fileTree"></div>
       </section>
 
       <section>
@@ -79,6 +79,7 @@
       <div class="work-tabs">
         <button class="on" data-tab="preview">Aperçu</button>
         <button data-tab="activity">Exécutions</button>
+        <button data-tab="files">Fichiers</button>
         <span class="preview-url" id="previewAddress">Aucun projet</span>
         <button id="refreshPreview" title="Actualiser">↻</button>
         <button id="openPreview" title="Ouvrir dans un onglet">↗</button>
@@ -94,6 +95,13 @@
         <div class="activity-view" id="activityView">
           <div class="activity-head"><span>EXÉCUTIONS DU PROJET</span><b id="activityCount">0</b></div>
           <div id="activityRuns"></div>
+        </div>
+        <div class="file-view" id="fileView">
+          <div class="file-head">
+            <span id="filePath">Sélectionne un fichier</span>
+            <span id="fileMeta"></span>
+          </div>
+          <pre><code id="fileContent">Choisis un fichier dans l’explorateur de gauche.</code></pre>
         </div>
       </div>
     </section>
@@ -116,6 +124,6 @@
     </section>
   </div>
 
-  <script src="/app.js?v=5"></script>
+  <script src="/app.js?v=6"></script>
 </body>
 </html>

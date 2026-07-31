@@ -7,6 +7,7 @@ let projects = [];
 let selectedId = null;
 let selectedProject = null;
 let currentRuns = [];
+let currentFiles = [];
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
@@ -93,6 +94,48 @@ function renderMessages(messages) {
   $("#messages").scrollTop = $("#messages").scrollHeight;
 }
 
+function renderFiles(files) {
+  currentFiles = files;
+  $("#fileCount").textContent = files.length;
+  $("#fileTree").innerHTML = files.map((file) => {
+    const depth = Math.max(0, file.path.split("/").length - 1);
+    return `
+      <button class="file-item ${file.changedInLastRun ? "changed" : ""}" data-file="${escapeHtml(file.path)}" title="${escapeHtml(file.path)}">
+        <span class="depth" style="width:${depth * 9}px"></span>
+        <i></i><span>${escapeHtml(file.name)}</span>
+      </button>`;
+  }).join("") || '<div class="empty-result">Aucun fichier</div>';
+
+  document.querySelectorAll("[data-file]").forEach((button) => {
+    button.onclick = () => showFile(button.dataset.file);
+  });
+}
+
+function showFile(filePath) {
+  const file = currentFiles.find((item) => item.path === filePath);
+  if (!file) return;
+
+  document.querySelectorAll("[data-file]").forEach((item) => {
+    item.classList.toggle("on", item.dataset.file === filePath);
+  });
+
+  $("#filePath").textContent = file.path;
+  $("#fileMeta").textContent = `${file.extension.toUpperCase()} · ${Math.max(1, Math.round(file.size / 1024))} Ko${file.changedInLastRun ? " · modifié récemment" : ""}`;
+  $("#fileContent").textContent = file.readable
+    ? (file.content ?? "Fichier vide")
+    : "Aperçu indisponible pour ce type de fichier.";
+  switchWorkTab("files");
+}
+
+function switchWorkTab(tab) {
+  document.querySelectorAll("[data-tab]").forEach((item) => {
+    item.classList.toggle("on", item.dataset.tab === tab);
+  });
+  shell.style.display = tab === "preview" ? "block" : "none";
+  $("#activityView").style.display = tab === "activity" ? "block" : "none";
+  $("#fileView").style.display = tab === "files" ? "block" : "none";
+}
+
 async function loadProjects() {
   projects = (await request("/api/projects")).projects;
   renderProjectList();
@@ -104,10 +147,11 @@ async function loadProjects() {
 
 async function selectProject(id, close = true) {
   selectedId = id;
-  const [{ project }, { messages }, { runs }] = await Promise.all([
+  const [{ project }, { messages }, { runs }, { files }] = await Promise.all([
     request(`/api/projects/${id}`),
     request(`/api/projects/${id}/messages`),
     request(`/api/projects/${id}/runs`),
+    request(`/api/projects/${id}/files`),
   ]);
   selectedProject = project;
   currentRuns = runs;
@@ -124,6 +168,7 @@ async function selectProject(id, close = true) {
 
   renderMessages(messages);
   renderRuns(runs);
+  renderFiles(files);
   renderProjectList($("#projectSearch").value);
   refreshPreview();
   if (close) closePanel();
@@ -205,14 +250,14 @@ document.querySelectorAll("[data-device]").forEach((button) => {
 });
 
 document.querySelectorAll("[data-tab]").forEach((button) => {
-  button.onclick = () => {
-    document.querySelectorAll("[data-tab]").forEach((item) => item.classList.remove("on"));
-    button.classList.add("on");
-    const showPreview = button.dataset.tab === "preview";
-    shell.style.display = showPreview ? "block" : "none";
-    $("#activityView").style.display = showPreview ? "none" : "block";
-  };
+  button.onclick = () => switchWorkTab(button.dataset.tab);
 });
+
+$("#showPreview").onclick = () => switchWorkTab("preview");
+$("#showFiles").onclick = () => {
+  switchWorkTab("files");
+  if (currentFiles.length) showFile(currentFiles[0].path);
+};
 
 $("#refreshPreview").onclick = refreshPreview;
 $("#openPreview").onclick = () => {
