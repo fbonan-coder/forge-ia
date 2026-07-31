@@ -321,8 +321,8 @@ $("#openPreview").onclick = () => {
 };
 
 request("/api/health")
-  .then(({ agent }) => {
-    $("#health").textContent = `Serveur actif · ${agent}`;
+  .then(({ agent, version }) => {
+    $("#health").textContent = `Serveur actif · ${agent} · v${version || "0.6.0"}`;
     $("#modelName").textContent = agent === "claude" ? "＋  Claude Sonnet" : "＋  Agent mock";
   })
   .catch(() => { $("#health").textContent = "Serveur indisponible"; });

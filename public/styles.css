@@ -12,6 +12,7 @@ button:disabled{cursor:wait;opacity:.6}
 header{grid-column:1/-1;display:grid;grid-template-columns:76px 198px 310px 1fr;border-bottom:1px solid var(--line);background:#101419;z-index:2}
 .logo{position:relative;display:grid;align-content:center;padding-left:17px;background:#080b0e;color:#f5f7f3;font-size:16px;font-weight:800;line-height:14px;letter-spacing:-.04em}
 .logo:after{content:"";position:absolute;top:16px;left:53px;width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+.app-version{position:absolute;left:17px;bottom:5px;color:#758089;font-size:7px;font-weight:normal;letter-spacing:.06em}
 .project-switcher{display:grid;grid-template-columns:31px 1fr auto;align-items:center;gap:11px;padding:0 14px;border-right:1px solid var(--line);background:#11151a;text-align:left}
 .project-switcher:hover{background:#171c22}.project-switcher>span:nth-child(2){min-width:0;display:flex;flex-direction:column;gap:3px}.project-switcher strong,.project-switcher small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.project-switcher small{color:#7f8993;font-size:9px}.project-switcher>i{color:#77818a;font-style:normal}
 .project-mark{width:31px;height:31px;display:grid;place-items:center;border:1px solid #3d4651;border-radius:50%;background:#161b21;color:var(--mint);font-weight:bold}
