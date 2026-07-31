@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Forge IA — Developer Cockpit</title>
-  <link rel="stylesheet" href="/styles.css?v=6">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="/styles.css?v=8">
 </head>
 <body>
   <div class="app">
@@ -50,6 +51,11 @@
       <section>
         <div class="section-label"><span>Activité</span><b id="runCount">0</b></div>
         <div id="runHistory" class="history"></div>
+      </section>
+
+      <section>
+        <div class="section-label"><span>Checkpoints</span><b id="checkpointCount">0</b></div>
+        <div id="checkpointList" class="checkpoint-list"></div>
       </section>
 
       <section>
@@ -124,6 +130,7 @@
     </section>
   </div>
 
-  <script src="/app.js?v=6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/common.min.js"></script>
+  <script src="/app.js?v=8"></script>
 </body>
 </html>

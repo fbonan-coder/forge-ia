@@ -94,6 +94,39 @@ function renderMessages(messages) {
   $("#messages").scrollTop = $("#messages").scrollHeight;
 }
 
+function renderCheckpoints(checkpoints) {
+  $("#checkpointCount").textContent = checkpoints.length;
+  $("#checkpointList").innerHTML = checkpoints.slice(0, 8).map((checkpoint) => `
+    <article class="checkpoint-item ${checkpoint.available ? "" : "unavailable"}">
+      <span>
+        <b>${escapeHtml(checkpoint.label)}</b>
+        <small>${new Date(checkpoint.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</small>
+      </span>
+      <button data-restore="${checkpoint.id}" ${checkpoint.available ? "" : "disabled"}>Restaurer</button>
+    </article>`).join("") || '<div class="empty-result">Aucun checkpoint</div>';
+
+  document.querySelectorAll("[data-restore]").forEach((button) => {
+    button.onclick = () => restoreCheckpoint(button.dataset.restore);
+  });
+}
+
+async function restoreCheckpoint(checkpointId) {
+  if (!selectedId) return;
+  if (!confirm("Restaurer cette version du projet ? Une sauvegarde de la version actuelle sera créée automatiquement.")) return;
+
+  try {
+    await request(`/api/projects/${selectedId}/checkpoints`, {
+      method: "POST",
+      body: JSON.stringify({ restoreId: checkpointId }),
+    });
+    await selectProject(selectedId, false);
+    refreshPreview();
+    alert("Checkpoint restauré.");
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
 function renderFiles(files) {
   currentFiles = files;
   $("#fileCount").textContent = files.length;
@@ -121,9 +154,28 @@ function showFile(filePath) {
 
   $("#filePath").textContent = file.path;
   $("#fileMeta").textContent = `${file.extension.toUpperCase()} · ${Math.max(1, Math.round(file.size / 1024))} Ko${file.changedInLastRun ? " · modifié récemment" : ""}`;
-  $("#fileContent").textContent = file.readable
-    ? (file.content ?? "Fichier vide")
+  const code = $("#fileContent");
+  const languageMap = {
+    html: "xml", svg: "xml", xml: "xml",
+    js: "javascript", mjs: "javascript", jsx: "javascript",
+    ts: "typescript", tsx: "typescript",
+    css: "css", scss: "scss", json: "json", md: "markdown",
+    yaml: "yaml", yml: "yaml",
+  };
+  const language = languageMap[file.extension] || "plaintext";
+  const content = file.readable
+    ? (file.content ?? "")
     : "Aperçu indisponible pour ce type de fichier.";
+
+  code.className = `language-${language}`;
+  if (file.readable && window.hljs && window.hljs.getLanguage(language)) {
+    code.innerHTML = window.hljs.highlight(content, {
+      language,
+      ignoreIllegals: true,
+    }).value || "Fichier vide";
+  } else {
+    code.textContent = content || "Fichier vide";
+  }
   switchWorkTab("files");
 }
 
@@ -147,11 +199,12 @@ async function loadProjects() {
 
 async function selectProject(id, close = true) {
   selectedId = id;
-  const [{ project }, { messages }, { runs }, { files }] = await Promise.all([
+  const [{ project }, { messages }, { runs }, { files }, { checkpoints }] = await Promise.all([
     request(`/api/projects/${id}`),
     request(`/api/projects/${id}/messages`),
     request(`/api/projects/${id}/runs`),
     request(`/api/projects/${id}/files`),
+    request(`/api/projects/${id}/checkpoints`),
   ]);
   selectedProject = project;
   currentRuns = runs;
@@ -169,6 +222,7 @@ async function selectProject(id, close = true) {
   renderMessages(messages);
   renderRuns(runs);
   renderFiles(files);
+  renderCheckpoints(checkpoints);
   renderProjectList($("#projectSearch").value);
   refreshPreview();
   if (close) closePanel();
@@ -230,6 +284,7 @@ $("#checkpoint").onclick = async (event) => {
       method: "POST",
       body: JSON.stringify({ label: "Checkpoint manuel" }),
     });
+    await selectProject(selectedId, false);
     button.classList.add("ok");
     button.textContent = "✓ Checkpoint créé";
     setTimeout(() => {
