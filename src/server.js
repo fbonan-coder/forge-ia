@@ -19,6 +19,7 @@ const checkpointFiles = new CheckpointManager(
   config.workspacesDir,
 );
 const publicDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../public");
+const APP_VERSION = "0.6.1";
 
 const mimeTypes = {
   ".html": "text/html",
@@ -46,7 +47,11 @@ function projectOrThrow(id) {
 
 async function api(request, response, pathname) {
   if (request.method === "GET" && pathname === "/api/health") {
-    return json(response, 200, { ok: true, agent: config.agentProvider });
+    return json(response, 200, {
+      ok: true,
+      agent: config.agentProvider,
+      version: APP_VERSION,
+    });
   }
   if (request.method === "GET" && pathname === "/api/projects") {
     return json(response, 200, { projects: store.listProjects() });
